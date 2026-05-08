@@ -1,0 +1,30 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: Install Dependencies
+        run: npm install
+      - name: Build All Services
+        run: npm run build --workspaces --if-present
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /var/www/booking-platform
+            git pull origin main
+            npm install
+            pm2 restart ecosystem.config.js
