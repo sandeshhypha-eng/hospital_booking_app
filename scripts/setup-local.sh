@@ -12,6 +12,15 @@ command -v pm2 >/dev/null 2>&1 || { echo "PM2 is required but not installed. Ins
 echo "Installing root and workspace dependencies..."
 npm install
 
+# 2.5 Create default .env if not exists
+if [ ! -f .env ]; then
+  echo "Creating default .env file..."
+  echo "DATABASE_URL=\"postgresql://admin:password@localhost:5432/booking_platform?schema=public\"" > .env
+  echo "JWT_SECRET=\"supersecret\"" >> .env
+  echo "REDIS_HOST=\"localhost\"" >> .env
+  echo "RABBITMQ_URL=\"amqp://guest:guest@localhost:5672\"" >> .env
+fi
+
 # 3. Start Infrastructure (DB, Redis, RabbitMQ)
 echo "Starting infrastructure services..."
 docker-compose up -d
