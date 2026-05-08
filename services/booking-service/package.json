@@ -1,0 +1,11 @@
+{
+  "name": "booking-service",
+  "version": "1.0.0",
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/microservices": "^10.0.0",
+    "amqplib": "^0.10.3",
+    "typeorm": "^0.3.17"
+  }
+}
