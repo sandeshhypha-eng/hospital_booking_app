@@ -1,0 +1,19 @@
+{
+  "name": "booking-platform-root",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "build:all": "npm run build --workspaces --if-present",
+    "test:all": "npm test --workspaces --if-present",
+    "prisma:generate": "npm run prisma:generate --workspace services/auth-service",
+    "infra:up": "docker-compose up -d",
+    "infra:down": "docker-compose down",
+    "dev": "pm2 start infrastructure/pm2/ecosystem.config.js",
+    "stop": "pm2 stop infrastructure/pm2/ecosystem.config.js"
+  }
+}

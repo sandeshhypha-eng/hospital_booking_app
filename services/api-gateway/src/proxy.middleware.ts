@@ -9,6 +9,10 @@ export class ProxyMiddleware implements NestMiddleware {
       '/business': { target: 'http://localhost:3002', changeOrigin: true },
       '/bookings': { target: 'http://localhost:3003', changeOrigin: true },
       '/queue': { target: 'http://localhost:3004', changeOrigin: true },
+      '/users': { target: 'http://localhost:3007', changeOrigin: true },
+      '/files': { target: 'http://localhost:3005', changeOrigin: true },
+      '/payments': { target: 'http://localhost:3006', changeOrigin: true },
+      '/notifications': { target: 'http://localhost:3008', changeOrigin: true },
     };
 
     const path = req.url.split('/')[1];

@@ -24,6 +24,21 @@ module.exports = {
       name: 'queue-service',
       script: 'services/queue-service/dist/main.js',
       env: { PORT: 3004 }
+    },
+    {
+      name: 'file-service',
+      script: 'services/file-service/dist/main.js',
+      env: { PORT: 3005 }
+    },
+    {
+      name: 'payment-service',
+      script: 'services/payment-service/dist/main.js',
+      env: { PORT: 3006 }
+    },
+    {
+      name: 'user-service',
+      script: 'services/user-service/dist/main.js',
+      env: { PORT: 3007 }
     }
   ]
 };
