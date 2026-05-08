@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,21 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(3000);
+  const server = await app.listen(3000);
+
+  // Handle WebSocket upgrades
+  const queueProxy = createProxyMiddleware('/queue', {
+    target: 'http://localhost:3004',
+    changeOrigin: true,
+    ws: true,
+  });
+
+  server.on('upgrade', (req, socket, head) => {
+    if (req.url.startsWith('/queue')) {
+      (queueProxy as any).upgrade(req, socket, head);
+    }
+  });
+
   console.log(`API Gateway is running on: 3000`);
 }
 bootstrap();

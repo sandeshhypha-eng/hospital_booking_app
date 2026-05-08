@@ -3,9 +3,23 @@ import { BookingController } from './modules/booking/booking.controller';
 import { BookingService } from './modules/booking/booking.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Booking } from './modules/booking/booking.entity';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
+          queue: 'notification_queue',
+          queueOptions: {
+            durable: false
+          },
+        },
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',

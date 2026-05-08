@@ -8,7 +8,7 @@ export class ProxyMiddleware implements NestMiddleware {
       '/auth': { target: 'http://localhost:3001', changeOrigin: true },
       '/business': { target: 'http://localhost:3002', changeOrigin: true },
       '/bookings': { target: 'http://localhost:3003', changeOrigin: true },
-      '/queue': { target: 'http://localhost:3004', changeOrigin: true },
+      '/queue': { target: 'http://localhost:3004', changeOrigin: true, ws: true },
       '/users': { target: 'http://localhost:3007', changeOrigin: true },
       '/files': { target: 'http://localhost:3005', changeOrigin: true },
       '/payments': { target: 'http://localhost:3006', changeOrigin: true },
