@@ -17,6 +17,8 @@
     "build:all": "npm run build --workspaces --if-present",
     "test:all": "npm test --workspaces --if-present",
     "prisma:generate": "npm run prisma:generate --workspace backend/services/auth-service",
+    "mock-install": "npm install express ws cors cookie-parser --no-audit --no-fund",
+    "mock-api": "node scripts/mock-api.js",
     "infra:up": "docker-compose up -d",
     "infra:down": "docker-compose down",
     "dev": "pm2 start infrastructure/pm2/ecosystem.config.js",
@@ -24,8 +26,24 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^10.4.9",
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20.14.15",
+    "@types/react": "19.2.17",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.18.0",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "ws": "^8.21.0"
   }
 }

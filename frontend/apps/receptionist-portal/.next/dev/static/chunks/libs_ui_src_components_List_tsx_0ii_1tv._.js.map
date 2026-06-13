@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/ma2301/Desktop/hospital%20app/hospital_booking_app/libs/ui/src/components/List.tsx"],"sourcesContent":["\"use client\"\nimport React from 'react'\n\nexport function List<T>({items, renderItem, emptyMessage='No items'}:{items:T[], renderItem:(item:T, idx:number)=>React.ReactNode, emptyMessage?:string}){\n  if (!items || items.length === 0) return <div className=\"text-gray-500\">{emptyMessage}</div>\n  return (\n    <ul className=\"space-y-2\">\n      {items.map((it, idx) => (\n        <li key={idx} className=\"p-3 border rounded bg-white\">{renderItem(it, idx)}</li>\n      ))}\n    </ul>\n  )\n}\n\nexport default List\n"],"names":["List","items","renderItem","emptyMessage","length","className","map","it","idx"],"mappings":";;;;;;;AAAA;;AAGO,SAASA,KAAQ,EAACC,KAAK,EAAEC,UAAU,EAAEC,eAAa,UAAU,EAAqF;IACtJ,IAAI,CAACF,SAASA,MAAMG,MAAM,KAAK,GAAG,qBAAO,6LAAC;QAAIC,WAAU;kBAAiBF;;;;;;IACzE,qBACE,6LAAC;QAAGE,WAAU;kBACXJ,MAAMK,GAAG,CAAC,CAACC,IAAIC,oBACd,6LAAC;gBAAaH,WAAU;0BAA+BH,WAAWK,IAAIC;eAA7DA;;;;;;;;;;AAIjB;KATgBR;uCAWDA"}}]
+}

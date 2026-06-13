@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #__next {
+  height: 100%;
+}
+
+/* basic skeleton */
+.skeleton { background: linear-gradient(90deg,#f3f4f6,#e5e7eb,#f3f4f6); background-size:200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { from { background-position:200% 0 } to { background-position:-200% 0 } }
+
+/* Accessibility helpers */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  padding: .5rem 1rem;
+  background: white;
+  border-radius: .375rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  z-index: 50;
+}
+
+/* Focus ring improvements */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 3px solid rgba(16,185,129,0.25);
+  outline-offset: 3px;
+}
+
+:root {
+  --color-brand: #059669;
+  --color-accent: #0ea5a4;
+  --color-surface: #ffffff;
+  --color-muted: #6b7280;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* small responsive tweaks */
+@media (max-width: 768px) {
+  /* reduce search input min width on small screens */
+  .search-min { min-width: 140px; }
+}
