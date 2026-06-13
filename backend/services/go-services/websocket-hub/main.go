@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"sync"
@@ -12,7 +13,7 @@ import (
 )
 
 var (
-	clients   = make(map[*websocket.Conn]bool)
+	clients   = make(map[string]map[*websocket.Conn]bool)
 	clientsMu sync.Mutex
 	rdb       *redis.Client
 	ctx       = context.Background()
@@ -28,14 +29,26 @@ func main() {
 
 	// WebSocket endpoint
 	app.Get("/ws/:branch_id", websocket.New(func(c *websocket.Conn) {
+		branchID := c.Params("branch_id")
+		if branchID == "" {
+			c.Close()
+			return
+		}
+
 		// When a client connects
 		clientsMu.Lock()
-		clients[c] = true
+		if clients[branchID] == nil {
+			clients[branchID] = make(map[*websocket.Conn]bool)
+		}
+		clients[branchID][c] = true
 		clientsMu.Unlock()
 
 		defer func() {
 			clientsMu.Lock()
-			delete(clients, c)
+			delete(clients[branchID], c)
+			if len(clients[branchID]) == 0 {
+				delete(clients, branchID)
+			}
 			clientsMu.Unlock()
 			c.Close()
 		}()
@@ -56,7 +69,7 @@ func main() {
 	// Listen to Redis Pub/Sub in background
 	go listenRedis()
 
-	log.Fatal(app.Listen(":4010"))
+	log.Fatal(app.Listen(":" + getEnv("PORT", "4010")))
 }
 
 func listenRedis() {
@@ -66,21 +79,39 @@ func listenRedis() {
 	ch := pubsub.Channel()
 
 	for msg := range ch {
-		broadcastMessage(msg.Payload)
+		branchID := branchIDFromPayload(msg.Payload)
+		if branchID == "" {
+			log.Printf("queue update missing branch_id: %s", msg.Payload)
+			continue
+		}
+		broadcastMessage(branchID, msg.Payload)
 	}
 }
 
-func broadcastMessage(message string) {
+func branchIDFromPayload(message string) string {
+	var payload struct {
+		BranchID string `json:"branch_id"`
+	}
+	if err := json.Unmarshal([]byte(message), &payload); err != nil {
+		return ""
+	}
+	return payload.BranchID
+}
+
+func broadcastMessage(branchID string, message string) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 
-	for client := range clients {
+	for client := range clients[branchID] {
 		err := client.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
 			log.Printf("broadcast error: %v", err)
 			client.Close()
-			delete(clients, client)
+			delete(clients[branchID], client)
 		}
+	}
+	if len(clients[branchID]) == 0 {
+		delete(clients, branchID)
 	}
 }
 

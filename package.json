@@ -2,18 +2,30 @@
   "name": "booking-platform-root",
   "private": true,
   "workspaces": [
-    "services/*",
-    "apps/*",
+    "backend/services/auth-service",
+    "backend/services/booking-service",
+    "backend/services/business-service",
+    "backend/services/file-service",
+    "backend/services/notification-service",
+    "backend/services/payment-service",
+    "backend/services/user-service",
+    "frontend/apps/*",
     "libs/*"
   ],
   "scripts": {
     "install:all": "npm install",
     "build:all": "npm run build --workspaces --if-present",
     "test:all": "npm test --workspaces --if-present",
-    "prisma:generate": "npm run prisma:generate --workspace services/auth-service",
+    "prisma:generate": "npm run prisma:generate --workspace backend/services/auth-service",
     "infra:up": "docker-compose up -d",
     "infra:down": "docker-compose down",
     "dev": "pm2 start infrastructure/pm2/ecosystem.config.js",
     "stop": "pm2 stop infrastructure/pm2/ecosystem.config.js"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@types/node": "^20.14.15",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }

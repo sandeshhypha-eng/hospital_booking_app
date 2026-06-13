@@ -15,10 +15,11 @@ npm install
 # 2.5 Create default .env if not exists
 if [ ! -f .env ]; then
   echo "Creating default .env file..."
-  echo "DATABASE_URL=\"postgresql://admin:password@localhost:5432/booking_platform?schema=public\"" > .env
+  echo "DATABASE_URL=\"postgresql://admin:password@localhost:5432/booking_platform\"" > .env
   echo "JWT_SECRET=\"supersecret\"" >> .env
+  echo "REDIS_URL=\"localhost:6379\"" >> .env
   echo "REDIS_HOST=\"localhost\"" >> .env
-  echo "RABBITMQ_URL=\"amqp://guest:guest@localhost:5672\"" >> .env
+  echo "RABBITMQ_URL=\"amqp://guest:guest@localhost:5672/\"" >> .env
 fi
 
 # 3. Start Infrastructure (DB, Redis, RabbitMQ)
@@ -31,12 +32,21 @@ sleep 5
 
 # 5. Initialize Auth Service (Prisma)
 echo "Initializing Auth Service database..."
-cd services/auth-service
-npm install
-npx prisma generate
+npm run prisma:generate
 # Note: In a real scenario, you'd run migrate here if DB was empty
 # npx prisma migrate dev --name init
-cd ../..
+
+# 5.5 Build Go services
+echo "Building Go services..."
+(
+  cd backend/services/go-services/api-gateway && go build -o main
+)
+(
+  cd backend/services/go-services/queue-service && go build -o main
+)
+(
+  cd backend/services/go-services/websocket-hub && go build -o main
+)
 
 # 6. Build services
 echo "Building all services..."

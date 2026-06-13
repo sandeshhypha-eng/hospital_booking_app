@@ -39,21 +39,27 @@ func main() {
 
 	// Service Proxy Mapping
 	services := map[string]string{
-		"/auth":     "http://localhost:4001",
-		"/booking":  "http://localhost:4002",
-		"/queue":    "http://localhost:4003",
-		"/files":    "http://localhost:4004",
+		"/auth":          "http://localhost:4001",
+		"/bookings":      "http://localhost:4002",
+		"/queue":         "http://localhost:4003",
+		"/files":         "http://localhost:4004",
 		"/notifications": "http://localhost:4005",
-		"/payments": "http://localhost:4006",
-		"/users":    "http://localhost:4007",
-		"/ws":       "http://localhost:4010",
+		"/payments":      "http://localhost:4006",
+		"/users":         "http://localhost:4007",
+		"/business":      "http://localhost:4008",
+		"/ws":            "http://localhost:4010",
 	}
 
 	// Proxy Routes
 	for path, target := range services {
+		pathCopy := path
 		targetCopy := target
 		app.All(path+"/*", func(c *fiber.Ctx) error {
-			// Extract JWT for internal services if needed (already validated if required)
+			if isProtectedRoute(pathCopy, c.Path()) {
+				if err := validateJWT(c); err != nil {
+					return err
+				}
+			}
 			return proxy.Do(c, targetCopy+c.Path())
 		})
 	}
@@ -63,7 +69,7 @@ func main() {
 
 	// Graceful Shutdown
 	go func() {
-		if err := app.Listen(":3000"); err != nil {
+		if err := app.Listen(":" + getEnv("PORT", "3000")); err != nil {
 			log.Panic(err)
 		}
 	}()
@@ -78,22 +84,37 @@ func main() {
 
 func authMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing token"})
-		}
-
-		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return jwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
+		if err := validateJWT(c); err != nil {
+			return err
 		}
 
 		return c.Next()
 	}
+}
+
+func validateJWT(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing token"})
+	}
+
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid token"})
+	}
+
+	return nil
+}
+
+func isProtectedRoute(prefix string, path string) bool {
+	if prefix == "/auth" {
+		return !(path == "/auth/login" || path == "/auth/signup" || path == "/auth/refresh")
+	}
+	return prefix != "/ws"
 }
 
 func getEnv(key, fallback string) string {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -61,7 +62,7 @@ func main() {
 	app.Post("/queue/complete-token", completeToken)
 	app.Get("/queue/status/:token_id", getTokenStatus)
 
-	log.Fatal(app.Listen(":4003"))
+	log.Fatal(app.Listen(":" + getEnv("PORT", "4003")))
 }
 
 func generateToken(c *fiber.Ctx) error {
@@ -73,10 +74,16 @@ func generateToken(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
+	if strings.TrimSpace(req.BranchID) == "" || strings.TrimSpace(req.ServiceID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "branch_id and service_id are required"})
+	}
 
 	// Increment Redis counter for the branch/service
 	key := fmt.Sprintf("counter:%s:%s", req.BranchID, req.ServiceID)
-	num, _ := rdb.Incr(ctx, key).Result()
+	num, err := rdb.Incr(ctx, key).Result()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to increment queue counter"})
+	}
 
 	tokenID := fmt.Sprintf("%s-%s-%04d", req.BranchID, req.ServiceID, num)
 	token := Token{
@@ -87,11 +94,15 @@ func generateToken(c *fiber.Ctx) error {
 	}
 
 	// Persist to DB
-	db.Create(&token)
+	if err := db.Create(&token).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to create token"})
+	}
 
 	// Add to Redis Queue
 	queueKey := fmt.Sprintf("queue:%s", req.BranchID)
-	rdb.RPush(ctx, queueKey, tokenID)
+	if err := rdb.RPush(ctx, queueKey, tokenID).Err(); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to enqueue token"})
+	}
 
 	// Publish to Redis for WebSocket Hub
 	broadcastUpdate(req.BranchID, "TokenGenerated", token)
@@ -101,8 +112,13 @@ func generateToken(c *fiber.Ctx) error {
 
 func getCurrentToken(c *fiber.Ctx) error {
 	branchID := c.Params("branch_id")
+	if strings.TrimSpace(branchID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "branch_id is required"})
+	}
 	var token Token
-	db.Where("branch_id = ? AND status = ?", branchID, "CALLED").Order("updated_at desc").First(&token)
+	if err := db.Where("branch_id = ? AND status = ?", branchID, "CALLED").Order("updated_at desc").First(&token).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "current token not found"})
+	}
 	return c.JSON(token)
 }
 
@@ -111,7 +127,12 @@ func callNextToken(c *fiber.Ctx) error {
 		BranchID string `json:"branch_id"`
 	}
 	var req Request
-	c.BodyParser(&req)
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+	if strings.TrimSpace(req.BranchID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "branch_id is required"})
+	}
 
 	queueKey := fmt.Sprintf("queue:%s", req.BranchID)
 	tokenID, err := rdb.LPop(ctx, queueKey).Result()
@@ -120,9 +141,13 @@ func callNextToken(c *fiber.Ctx) error {
 	}
 
 	var token Token
-	db.First(&token, "id = ?", tokenID)
+	if err := db.First(&token, "id = ?", tokenID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "token not found"})
+	}
 	token.Status = "CALLED"
-	db.Save(&token)
+	if err := db.Save(&token).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to update token"})
+	}
 
 	broadcastUpdate(req.BranchID, "TokenCalled", token)
 	publishRabbitMQ("token_called", token)
@@ -135,12 +160,21 @@ func completeToken(c *fiber.Ctx) error {
 		TokenID string `json:"token_id"`
 	}
 	var req Request
-	c.BodyParser(&req)
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+	if strings.TrimSpace(req.TokenID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "token_id is required"})
+	}
 
 	var token Token
-	db.First(&token, "id = ?", req.TokenID)
+	if err := db.First(&token, "id = ?", req.TokenID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "token not found"})
+	}
 	token.Status = "COMPLETED"
-	db.Save(&token)
+	if err := db.Save(&token).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "failed to update token"})
+	}
 
 	broadcastUpdate(token.BranchID, "TokenCompleted", token)
 	return c.JSON(token)
@@ -148,8 +182,13 @@ func completeToken(c *fiber.Ctx) error {
 
 func getTokenStatus(c *fiber.Ctx) error {
 	tokenID := c.Params("token_id")
+	if strings.TrimSpace(tokenID) == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "token_id is required"})
+	}
 	var token Token
-	db.First(&token, "id = ?", tokenID)
+	if err := db.First(&token, "id = ?", tokenID).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "token not found"})
+	}
 	return c.JSON(token)
 }
 

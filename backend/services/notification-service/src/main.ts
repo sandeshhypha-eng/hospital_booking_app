@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+  const app = await NestFactory.create(AppModule);
+
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672'],
@@ -13,7 +15,10 @@ async function bootstrap() {
       },
     },
   });
-  await app.listen();
-  console.log('Notification Service is listening via RabbitMQ');
+
+  await app.startAllMicroservices();
+  const port = process.env.PORT || 4005;
+  await app.listen(port);
+  console.log(`Notification Service is running on: ${port} and listening via RabbitMQ`);
 }
 bootstrap();

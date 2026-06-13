@@ -29,18 +29,40 @@ CREATE DATABASE booking_platform;
 
 ## 3. Application Build
 
+### Install Dependencies
+```bash
+npm install
+npm run prisma:generate
+```
+
 ### Build Go Services
 ```bash
-cd go-services/api-gateway && go build -o main
-cd ../queue-service && go build -o main
-cd ../websocket-hub && go build -o main
+cd backend/services/go-services/api-gateway && go build -o main && cd ../../../..
+cd backend/services/go-services/queue-service && go build -o main && cd ../../../..
+cd backend/services/go-services/websocket-hub && go build -o main && cd ../../../..
 ```
 
 ### Build NestJS Services
 ```bash
-cd services/auth-service && npm install && npm run build
--- Repeat for all NestJS services
+npm run build:all
 ```
+
+## Active Service Map
+
+| Service | Runtime | Port |
+| --- | --- | --- |
+| API Gateway | Go/Fiber | 3000 |
+| Auth Service | NestJS | 4001 |
+| Booking Service | NestJS | 4002 |
+| Queue Service | Go/Fiber | 4003 |
+| File Service | NestJS | 4004 |
+| Notification Service | NestJS + RabbitMQ | 4005 |
+| Payment Service | NestJS | 4006 |
+| User Service | NestJS | 4007 |
+| Business Service | NestJS | 4008 |
+| WebSocket Hub | Go/Fiber | 4010 |
+
+The active gateway and queue services are the Go implementations under `backend/services/go-services`. The older NestJS `backend/services/api-gateway` and `backend/services/queue-service` directories are retained for reference but are excluded from active npm workspaces and PM2 runtime.
 
 ## 4. Deployment with PM2
 
