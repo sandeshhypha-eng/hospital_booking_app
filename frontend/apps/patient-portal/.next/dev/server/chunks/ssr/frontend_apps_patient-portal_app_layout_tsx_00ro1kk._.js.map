@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/ma2301/Desktop/hospital%20app/hospital_booking_app/frontend/apps/patient-portal/app/layout.tsx"],"sourcesContent":["import './globals.css'\nimport React from 'react'\n\nexport const metadata = {\n  title: process.env.NEXT_PUBLIC_APP_NAME || 'Patient Portal'\n}\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\">\n      <body className=\"min-h-screen bg-gray-50 text-gray-800\">\n        <a href=\"#main\" className=\"skip-link\">Skip to content</a>\n        <div className=\"max-w-5xl mx-auto p-4\">\n          <header aria-hidden className=\"sr-only\" />\n          <main id=\"main\" role=\"main\">{children}</main>\n        </div>\n      </body>\n    </html>\n  )\n}\n"],"names":["metadata","title","process","env","NEXT_PUBLIC_APP_NAME","RootLayout","children","lang","className","href","id","role"],"mappings":";;;;;;;;;AAGO,MAAMA,WAAW;IACtBC,OAAOC,QAAQC,GAAG,CAACC,oBAAoB,IAAI;AAC7C;AAEe,SAASC,WAAW,EAAEC,QAAQ,EAAiC;IAC5E,qBACE,oOAAC;QAAKC,MAAK;kBACT,cAAA,qOAAC;YAAKC,WAAU;;8BACd,oOAAC;oBAAEC,MAAK;oBAAQD,WAAU;8BAAY;;8BACtC,qOAAC;oBAAIA,WAAU;;sCACb,oOAAC;4BAAO,aAAW;4BAACA,WAAU;;sCAC9B,oOAAC;4BAAKE,IAAG;4BAAOC,MAAK;sCAAQL;;;;;;;AAKvC"}}]
-}
